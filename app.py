@@ -22,45 +22,20 @@ class config:
 
     @staticmethod
     def limpiar(texto):
-      return str(texto).strip().replace("  ", " ").replace("\t", "").replace("\n", "")
+        if texto is None:
+            return "No especificado"
+        return str(texto).strip().replace("  ", " ").replace("\t", "").replace("\n", "")
 
 # Ruta para servir el HTML principal
 @app.route('/')
 def index():
     return send_from_directory('.', 'index.html')
 
-# Ruta usuarios de la API
-@app.route('/api/usuarios')
-def usuarios():
-    conn = pyodbc.connect(config.get_connection_string())
-    try:
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM usuarios")
-        usuarios_lista = []
-        for row in cursor.fetchall():
-          dpi, nombres, apellidos, correo_electronico, telefono, rol = row
-          usuario = {
-            "dpi": config.limpiar(dpi),
-            "nombres": config.limpiar(nombres),
-            "apellidos": config.limpiar(apellidos),
-            "correo_electronico": config.limpiar(correo_electronico),
-            "telefono": config.limpiar(telefono),
-            "rol": config.limpiar(rol)
-          }
-        usuarios_lista.append(usuario)
-        cursor.close()
-        return jsonify(usuarios_lista)
-    except Exception as e:
-        print(f"Error en usuarios(): {e}")
-        return jsonify({"error": "Error al obtener usuarios"}), 500
-    finally:
-        conn.close()
-
 @app.route('/api/vehiculos')
 def vehiculos():
     # Parámetros de paginación
     page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 10, type=int)  # 10 vehículos por página por defecto
+    per_page = request.args.get('per_page', 10, type=int)
     search = request.args.get('search', '', type=str)
     
     # Calcular offset
@@ -69,9 +44,9 @@ def vehiculos():
     conn = pyodbc.connect(config.get_connection_string())
     
     try:
-        # Query base
-        base_query = "SELECT vin, marca, modelo, anio_fabricacion, color, kilometraje, precio, condicion FROM vehiculo"
-        count_query = "SELECT COUNT(*) FROM vehiculo"
+        # Query base con SELECT *
+        base_query = "SELECT * FROM vehiculos"
+        count_query = "SELECT COUNT(*) FROM vehiculos"
         
         # Agregar filtro de búsqueda si existe
         if search:
@@ -103,16 +78,20 @@ def vehiculos():
         
         vehiculos_lista = []
         for row in cursor.fetchall():
-            vin, marca, modelo, anio_fabricacion, color, kilometraje, precio, condicion = row
+            # Estructura de vehiculos: id_vehiculo(0), vin(1), marca(2), modelo(3), anio_fabricacion(4), 
+            # color(5), kilometraje(6), precio(7), condicion(8), fecha_registro(9), numero_chasis(10), 
+            # placa(11), tipo_vehiculo(12), cc_motor(13), tipo_combustible(14), transmision(15), 
+            # numero_puertas(16), traccion(17), historial_accidentes(18), mantenimiento(19), 
+            # garantia(20), disponibilidad_financiamiento(21), predio_o_vendedor(22), contacto(23), id_vendedor(24)
             vehiculo = {
-                "vin": config.limpiar(vin),
-                "marca": config.limpiar(marca),
-                "modelo": config.limpiar(modelo),
-                "anio_fabricacion": config.limpiar(anio_fabricacion),
-                "color": config.limpiar(color),
-                "kilometraje": config.limpiar(kilometraje),
-                "precio": config.limpiar(precio),
-                "condicion": config.limpiar(condicion)
+                "vin": config.limpiar(row[1]),
+                "marca": config.limpiar(row[2]),
+                "modelo": config.limpiar(row[3]),
+                "anio_fabricacion": config.limpiar(row[4]),
+                "color": config.limpiar(row[5]),
+                "kilometraje": config.limpiar(row[6]),
+                "precio": config.limpiar(row[7]),
+                "condicion": config.limpiar(row[8])
             }
             vehiculos_lista.append(vehiculo)
         
@@ -139,46 +118,42 @@ def vehiculos():
     finally:
         conn.close()
 
-# Nuevo endpoint para detalles completos de un vehículo específico
+# Endpoint para detalles completos de un vehículo específico
 @app.route('/api/vehiculos/<string:vin>')
 def vehiculo_detalle(vin):
     conn = pyodbc.connect(config.get_connection_string())
     try:
         cursor = conn.cursor()
-        cursor.execute("SELECT * FROM vehiculo WHERE vin = ?", (vin,))
+        cursor.execute("SELECT * FROM vehiculos WHERE vin = ?", (vin,))
         row = cursor.fetchone()
         
         if not row:
             cursor.close()
             return jsonify({"error": "Vehículo no encontrado"}), 404
         
-        vin, marca, modelo, anio_fabricacion, numero_chasis, placa, tipo_vehiculo, cc, tipo_combustible, transmision, color, kilometraje, numero_puertas, traccion, condicion, historial_accidentes, mantenimiento, garantia, precio, financiamiento, predio_vendedor, contacto, fotos, videos = row
-        
         vehiculo = {
-            "vin": config.limpiar(vin),
-            "marca": config.limpiar(marca),
-            "modelo": config.limpiar(modelo),
-            "anio_fabricacion": config.limpiar(anio_fabricacion),
-            "numero_chasis": config.limpiar(numero_chasis),
-            "placa": config.limpiar(placa),
-            "tipo_vehiculo": config.limpiar(tipo_vehiculo),
-            "cc": config.limpiar(cc),
-            "tipo_combustible": config.limpiar(tipo_combustible),
-            "transmision": config.limpiar(transmision),
-            "color": config.limpiar(color),
-            "kilometraje": config.limpiar(kilometraje),
-            "numero_puertas": config.limpiar(numero_puertas),
-            "traccion": config.limpiar(traccion),
-            "condicion": config.limpiar(condicion),
-            "historial_accidentes": config.limpiar(historial_accidentes),
-            "mantenimiento": config.limpiar(mantenimiento),
-            "garantia": config.limpiar(garantia),
-            "precio": config.limpiar(precio),
-            "financiamiento": config.limpiar(financiamiento),
-            "predio_vendedor": config.limpiar(predio_vendedor),
-            "contacto": config.limpiar(contacto),
-            "fotos": config.limpiar(fotos),
-            "videos": config.limpiar(videos)
+            "vin": config.limpiar(row[1]),
+            "marca": config.limpiar(row[2]),
+            "modelo": config.limpiar(row[3]),
+            "anio_fabricacion": config.limpiar(row[4]),
+            "numero_chasis": config.limpiar(row[10]),
+            "placa": config.limpiar(row[11]),
+            "tipo_vehiculo": config.limpiar(row[12]),
+            "motor_cc": config.limpiar(row[13]),
+            "tipo_combustible": config.limpiar(row[14]),
+            "transmision": config.limpiar(row[15]),
+            "color": config.limpiar(row[5]),
+            "kilometraje": config.limpiar(row[6]),
+            "numero_puertas": config.limpiar(row[16]),
+            "traccion": config.limpiar(row[17]),
+            "condicion": config.limpiar(row[8]),
+            "historial_accidentes": config.limpiar(row[18]),
+            "mantenimiento": config.limpiar(row[19]),
+            "garantia": config.limpiar(row[20]),
+            "precio": config.limpiar(row[7]),
+            "financiamiento": config.limpiar(row[21]),
+            "predio_vendedor": config.limpiar(row[22]),
+            "contacto": config.limpiar(row[23])
         }
         cursor.close()
         return jsonify(vehiculo)
@@ -188,9 +163,6 @@ def vehiculo_detalle(vin):
     finally:
         conn.close()
 
-
 # Ejecutar la aplicación
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
-    # • http://127.0.0.1:5000/api/usuarios → endpoint para ver usuarios
-    # • Ctrl+C → En la terminal donde está corriendo
