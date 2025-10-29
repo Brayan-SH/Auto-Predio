@@ -34,8 +34,7 @@ body {
 }
 
 /* Asegurar que el contenedor permita sticky */
-.container {
-  height: auto;
+.container {height: auto;
   overflow: visible;
 }
 
@@ -45,9 +44,10 @@ html {
 }
 
 /* Mejora el contraste del contenido debajo */
-.card-body {
+.card.mb-2 {
   background-color: #f0ecec;
   border-radius: 0 0 0.375rem 0.375rem;
+  flex-wrap: wrap;
 }
 
 /* Mejor separación visual */
@@ -60,4 +60,13 @@ html {
 
 #vehiculos-container {
   padding: 10px;
+}
+
+.navbar-brand.fw-bold, 
+.mb-0.text-dark.fw-boldr {
+  cursor: pointer;
+}
+
+.container.section-formulario-nuevo-vehiculo {
+  width: 100%;
 }

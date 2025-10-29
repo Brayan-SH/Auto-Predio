@@ -4,8 +4,3 @@ select *from vendedores
 select *from vehiculos
 select *from fotos_vehiculos
 select *from videos_vehiculos
-
--- Segundas Tablas
-select *from vehiculo
-select *from transmision_vehiculo
-

@@ -34,12 +34,12 @@ def index():
 @app.route('/api/vehiculos')
 def vehiculos():
     # Parámetros de paginación
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 10, type=int)
+    page = request.args.get('page', 1, type=int) # Por defecto página 1
+    per_page = request.args.get('per_page', 10, type=int) # Por defecto 10 vehículos por página
     search = request.args.get('search', '', type=str)
     
     # Calcular offset
-    offset = (page - 1) * per_page
+    offset = (page - 1) * per_page # Usuario cambio de página, Para mostrar los siguientes vehiculos
     
     conn = pyodbc.connect(config.get_connection_string())
     
@@ -50,7 +50,7 @@ def vehiculos():
         
         # Agregar filtro de búsqueda si existe
         if search:
-            where_clause = " WHERE marca LIKE ? OR modelo LIKE ? OR color LIKE ?"
+            where_clause = " WHERE marca LIKE ? OR modelo LIKE ? OR vin LIKE ?"
             search_param = f"%{search}%"
             base_query += where_clause
             count_query += where_clause
@@ -63,8 +63,7 @@ def vehiculos():
             
             # Ejecutar query con paginación y búsqueda
             cursor = conn.cursor()
-            cursor.execute(base_query + f" ORDER BY marca, modelo OFFSET {offset} ROWS FETCH NEXT {per_page} ROWS ONLY", 
-                          (search_param, search_param, search_param))
+            cursor.execute(base_query + f" ORDER BY marca, modelo OFFSET {offset} ROWS FETCH NEXT {per_page} ROWS ONLY", (search_param, search_param, search_param))
         else:
             # Primero contar total sin filtro
             cursor_count = conn.cursor()
@@ -78,11 +77,6 @@ def vehiculos():
         
         vehiculos_lista = []
         for row in cursor.fetchall():
-            # Estructura de vehiculos: id_vehiculo(0), vin(1), marca(2), modelo(3), anio_fabricacion(4), 
-            # color(5), kilometraje(6), precio(7), condicion(8), fecha_registro(9), numero_chasis(10), 
-            # placa(11), tipo_vehiculo(12), cc_motor(13), tipo_combustible(14), transmision(15), 
-            # numero_puertas(16), traccion(17), historial_accidentes(18), mantenimiento(19), 
-            # garantia(20), disponibilidad_financiamiento(21), predio_o_vendedor(22), contacto(23), id_vendedor(24)
             vehiculo = {
                 "vin": config.limpiar(row[1]),
                 "marca": config.limpiar(row[2]),
@@ -162,6 +156,81 @@ def vehiculo_detalle(vin):
         return jsonify({"error": "Error al obtener detalles del vehículo"}), 500
     finally:
         conn.close()
+
+# Endpoint para guardar un nuevo vehículo
+@app.route('/api/nuevo_vehiculo', methods=['POST']) # POST: publicar datos
+def nuevo_vehiculo():
+    try:
+        # Validar que se recibieron datos JSON
+        if not request.json:
+            return jsonify({"error": "No se recibieron datos JSON"}), 400
+        
+        nuevo_vehiculo = request.json
+        
+        # Validar solo campos esenciales como obligatorios
+        campos_obligatorios = ["vin", "marca", "modelo", "anio_fabricacion", "precio"]
+        for campo in campos_obligatorios:
+            if not nuevo_vehiculo.get(campo):
+                return jsonify({"error": f"El campo '{campo}' es obligatorio"}), 400
+        
+        conn = pyodbc.connect(config.get_connection_string())
+        cursor = conn.cursor()
+        
+        # Verificar si ya existe un vehículo con ese VIN
+        cursor.execute("SELECT COUNT(*) FROM vehiculos WHERE vin = ?", (nuevo_vehiculo.get("vin"),))
+        if cursor.fetchone()[0] > 0:
+            cursor.close()
+            conn.close()
+            return jsonify({"error": "Ya existe un vehículo con ese VIN"}), 409
+        
+        # Insertar nuevo vehículo (con todos los campos posiblemente obligatorios)
+        cursor.execute("""
+            INSERT INTO vehiculos (
+                vin, marca, modelo, anio_fabricacion, color, kilometraje, precio, condicion, 
+                fecha_registro, numero_chasis, placa, tipo_vehiculo, cc_motor, tipo_combustible,
+                transmision, numero_puertas, traccion, historial_accidentes, mantenimiento,
+                garantia, disponibilidad_financiamiento, predio_o_vendedor, contacto, id_vendedor
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            config.limpiar(nuevo_vehiculo.get("vin")),
+            config.limpiar(nuevo_vehiculo.get("marca")),
+            config.limpiar(nuevo_vehiculo.get("modelo")),
+            config.limpiar(nuevo_vehiculo.get("anio_fabricacion")),
+            config.limpiar(nuevo_vehiculo.get("color", "No especificado")),
+            config.limpiar(nuevo_vehiculo.get("kilometraje", "0")),
+            config.limpiar(nuevo_vehiculo.get("precio")),
+            config.limpiar(nuevo_vehiculo.get("condicion", "Usado")),
+            config.limpiar(nuevo_vehiculo.get("numero_chasis", "No especificado")),
+            config.limpiar(nuevo_vehiculo.get("placa", "No especificado")),
+            config.limpiar(nuevo_vehiculo.get("tipo_vehiculo", "No especificado")),
+            config.limpiar(nuevo_vehiculo.get("cc_motor", "No especificado")),
+            config.limpiar(nuevo_vehiculo.get("tipo_combustible", "No especificado")),
+            config.limpiar(nuevo_vehiculo.get("transmision", "No especificado")),
+            config.limpiar(nuevo_vehiculo.get("numero_puertas", "4")),
+            config.limpiar(nuevo_vehiculo.get("traccion", "No especificado")),
+            config.limpiar(nuevo_vehiculo.get("historial_accidentes", "No especificado")),
+            config.limpiar(nuevo_vehiculo.get("mantenimiento", "No especificado")),
+            config.limpiar(nuevo_vehiculo.get("garantia", "No especificado")),
+            config.limpiar(nuevo_vehiculo.get("financiamiento", "No especificado")),
+            config.limpiar(nuevo_vehiculo.get("predio_vendedor", "No especificado")),
+            config.limpiar(nuevo_vehiculo.get("contacto", "No especificado")),
+            27  # ID de vendedor por defecto
+        ))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({"message": "Vehículo guardado exitosamente", "vin": nuevo_vehiculo.get("vin")}), 201
+        
+    except pyodbc.Error as e:
+        print(f"Error de base de datos en nuevo_vehiculo(): {e}")
+        print(f"Detalles del error: {str(e)}")
+        print(f"Datos recibidos: {nuevo_vehiculo}")
+        return jsonify({"error": f"Error de base de datos: {str(e)}"}), 500
+    except Exception as e:
+        print(f"Error en nuevo_vehiculo(): {e}")
+        return jsonify({"error": "Error interno del servidor"}), 500
 
 # Ejecutar la aplicación
 if __name__ == '__main__':

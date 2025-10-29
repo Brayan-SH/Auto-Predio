@@ -1,7 +1,7 @@
 USE [Auto Predio];
 GO
 -- VEHÍCULO
-INSERT INTO vehiculos (vin, marca, modelo, anio_fabricacion, color, kilometraje, precio, condicion, fecha_registro, numero_chasis, placa, tipo_vehiculo, cc_motor, tipo_combustible, transmision, numero_puertas, traccion, historial_accidentes, mantenimiento, garantia, disponibilidad_financiamiento, predio_o_vendedor, contacto, id_vendedor)
+INSERT INTO vehiculos (vin, marca, modelo, anio_fabricacion, color, kilometraje, precio, condicion, fecha_registro, numero_chasis, placa, tipo_vehiculo, motor_cc, tipo_combustible, transmision, numero_puertas, traccion, historial_accidentes, mantenimiento, garantia, disponibilidad_financiamiento, predio_o_vendedor, contacto, id_vendedor)
 VALUES ('TEST123456789VIN', 'Toyota', 'Corolla', 2024, 'Blanco', '5000', '350000', 'Nuevo', GETDATE(), 'TEST123456789CHA', 'TST-2024', 'Sedan', '1.8L', 'Gasolina', 'CVT', 4, 'FWD', 'Sin accidentes', 'Toyota Service', 'Vigente 3 años', 'Disponible', 'Toyota Center', 'test@toyota.mx', (SELECT v.id_vendedor FROM vendedores v WHERE v.nombre_comercial = 'Premium Motors CDMX'));
 
 -- FOTOS (usar fotos_vehiculos)

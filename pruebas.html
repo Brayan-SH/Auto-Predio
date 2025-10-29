@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Resgistrar vehiculo</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <section class="container p-5">
+      <h5 class="text-center">Registrar vehículo</h5>
+      <div class="row mt-5">
+        <div class="col offset-1">
+          <h5 class="font-weight-bold">• Datos de identificacion:</h5>
+          <label for="vin">Vin:</label>
+          <input
+            type="text"
+            id="vin"
+            class="form-control"
+            placeholder="ejemplo: JTEPH3FJ5KJ123456"
+          />
+          <label for="numero-chasis">Numero de Chasis:</label>
+          <input
+            type="text"
+            id="numero-chasis"
+            class="form-control"
+            placeholder="ejemplo: JTEPH3FJ5KJ123456"
+          />
+          <label for="marca">Marca:</label>
+          <input
+            type="text"
+            id="marca"
+            class="form-control"
+            placeholder="Toyota"
+          />
+          <label for="modelo">Modelo:</label>
+          <input
+            type="text"
+            id="modelo"
+            class="form-control"
+            placeholder="Rav4"
+          />
+          <label for="anio-fabricacion">Año de Fabricación:</label>
+          <input
+            type="text"
+            id="anio-fabricacion"
+            class="form-control"
+            placeholder="ejemplo: 2020"
+          />
+          <label for="placa">Placa (6 Caracteres):</label>
+          <input
+            type="text"
+            id="placa"
+            class="form-control"
+            placeholder="ABC1234"
+          />
+
+          <h5 class="mt-4">• Caracteristicas Tecnicas:</h5>
+          <label for="tipo-vehiculo">Tipo de vehículo:</label>
+          <input
+            type="text"
+            id="tipo-vehiculo"
+            class="form-control"
+            placeholder="sedán, SUV, pickup, moto, etc."
+          />
+          <label for="cc-motor">CC del Motor:</label>
+          <input
+            type="text"
+            id="cc-motor"
+            class="form-control"
+            placeholder="2500cc"
+          />
+          <label for="tipo-combustible">Tipo de Combustible:</label>
+          <input
+            type="text"
+            id="tipo-combustible"
+            class="form-control"
+            placeholder="Gasolina, Diésel, Eléctrico, etc."
+          />
+          <label for="transmision">Transmisión:</label>
+          <input
+            type="text"
+            id="transmision"
+            class="form-control"
+            placeholder="manual, automática, CVT, etc. "
+          />
+          <label for="color">Color:</label>
+          <input
+            type="text"
+            id="color"
+            class="form-control"
+            placeholder="Rojo, Azul, Negro, etc."
+          />
+          <label for="kilometraje">Kilometraje:</label>
+          <input
+            type="text"
+            id="kilometraje"
+            class="form-control"
+            placeholder="xxx,xxxkms"
+          />
+          <label for="numero-puertas">Cantidad de puertas:</label>
+          <input
+            type="text"
+            id="numero-puertas"
+            class="form-control"
+            placeholder="5 puertas"
+          />
+          <label for="traccion">Tracción:</label>
+          <input
+            type="text"
+            id="traccion"
+            class="form-control"
+            placeholder="4x2, 4x4, Sencillo, etc"
+          />
+
+          <h5 class="mt-4">• Estado y condiciones</h5>
+          <label for="condicion">condicion:</label>
+          <input
+            type="text"
+            id="condicion"
+            class="form-control"
+            placeholder="Nuevo/Usado/Semi-Nuevo"
+          />
+          <label for="historial-accidentes">Historial de accidentes:</label>
+          <input
+            type="text"
+            id="historial-accidentes"
+            class="form-control"
+            placeholder="si está disponible (golpe lado del bomper)"
+          />
+          <label for="mantenimiento">Mantenimiento del vehiculo:</label>
+          <input
+            type="text"
+            id="mantenimiento"
+            class="form-control"
+            placeholder="Al dia, Reciente, etc"
+          />
+          <label for="garantia">Garantia:</label>
+          <input
+            type="text"
+            id="garantia"
+            class="form-control"
+            placeholder="Disponible/No Disponible"
+          />
+        </div>
+        <div class="col offset-1">
+          <h5 class="font-weight-bold">• Datos de venta:</h5>
+          <label for="precio">Precio de venta:</label>
+          <input
+            type="text"
+            id="precio"
+            class="form-control"
+            placeholder="Ejemplo: 2500"
+          />
+          <label for="financiamiento">Disponibilidad de financiamiento:</label>
+          <input
+            type="text"
+            id="financiamiento"
+            class="form-control"
+            placeholder="Disponible/No Disponible"
+          />
+          <label for="vendedor">Predio/vendedor:</label>
+          <input
+            type="text"
+            id="vendedor"
+            class="form-control"
+            placeholder="Nombre del Vendedor o el Predio"
+          />
+          <label for="contacto">Contacto:</label>
+          <input
+            type="text"
+            id="contacto"
+            class="form-control"
+            placeholder="Teléfono, WhatsApp..."
+          />
+
+          <h5 class="mt-4">• Fotos:</h5>
+          <!-- 1 parametro : Guardar el vin del vehiculo -->
+          <label for="fotos">Ruta:</label>
+          <input
+            type="text"
+            id="fotos"
+            class="form-control"
+            placeholder="URL de exterior, interior, motor"
+          />
+          <label for="fotos">Descripcion de la Foto:</label>
+          <input
+            type="text"
+            id="descripcion_foto"
+            class="form-control"
+            placeholder="Descripción de la foto"
+          />
+          <!-- 4 parametro : Guardar el vin del vehiculo -->
+
+          <h5 class="mt-4">• Videos:</h5>
+          <!-- 1 parametro : Guardar el vin del vehiculo -->
+          <label for="videos">Ruta:</label>
+          <input
+            type="text"
+            id="videos"
+            class="form-control"
+            placeholder="URL de exterior, interior, motor"
+          />
+          <label for="videos">Descripcion del Video:</label>
+          <input
+            type="text"
+            id="descripcion_video"
+            class="form-control"
+            placeholder="Descripción del video"
+          />
+          <!-- 4 parametro : Guardar el vin del vehiculo -->
+        </div>
+      </div>
+
+      <div class="row-6 text-center mt-5">
+        <button type="button" class="btn btn-primary">Guardar</button>
+        <button type="button" class="btn btn-danger">Cancelar</button>
+      </div>
+    </section>
+  </body>
+</html>
