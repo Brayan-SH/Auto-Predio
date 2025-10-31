@@ -4,22 +4,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Login</title>
-    <link rel="stylesheet" href="login.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-sRIl4kxILFvY47J16cr9ZwB07vP4J8+LH7qKQnuqkuIAvNWLzeN8tE5YBujZqJLB" crossorigin="anonymous">
+    <link rel="stylesheet" href="styles.css">
   </head>
-  <body>
-    <section class="vh-100" style="background-color: #508bfc">
-      <div class="container py-5 h-100">
+  <body style="background-color: #508bfc;">
+    <section class="vh-100">
+      <div class="py-2 h-100">
         <div class="row d-flex justify-content-center align-items-center h-100">
           <div class="col-12 col-md-8 col-lg-6 col-xl-5">
-            <div class="card shadow-2-strong" style="border-radius: 1rem">
+            <div class="card card-login shadow-2-strong">
               <div class="card-body p-5 text-center">
-                <h3 class="mb-5">Sign in</h3>
+                <h3 class="m-5">Sign in</h3>
 
                 <div data-mdb-input-init class="form-outline mb-4">
                   <input
                     type="email"
-                    id="typeEmailX-2"
+                    id="email"
                     class="form-control form-control-lg"
+                    placeholder="Usuario@correo.com"
                   />
                   <label class="form-label" for="typeEmailX-2">Email</label>
                 </div>
@@ -27,11 +30,11 @@
                 <div data-mdb-input-init class="form-outline mb-4">
                   <input
                     type="password"
-                    id="typePasswordX-2"
+                    id="password"
                     class="form-control form-control-lg"
+                    placeholder="••••••••"
                   />
-                  <label class="form-label" for="typePasswordX-2"
-                    >Password</label
+                  <label class="form-label" for="typePasswordX-2">Password</label
                   >
                 </div>
 
@@ -53,7 +56,7 @@
                   data-mdb-ripple-init
                   class="btn btn-primary btn-lg btn-block"
                   type="submit"
-                >
+                  onclick="Login()">
                   Login
                 </button>
 
@@ -62,26 +65,21 @@
                 <button
                   data-mdb-button-init
                   data-mdb-ripple-init
-                  class="btn btn-lg btn-block btn-primary"
+                  class="btn btn-lg btn-block btn-primary  m-1"
                   style="background-color: #dd4b39"
                   type="submit"
+                  onclick="CrearCuenta()"
                 >
-                  <i class="fab fa-google me-2"></i> Sign in with google
+                  <i class="me-2"></i>Crear Cuenta
                 </button>
-                <button
-                  data-mdb-button-init
-                  data-mdb-ripple-init
-                  class="btn btn-lg btn-block btn-primary mb-2"
-                  style="background-color: #3b5998"
-                  type="submit"
-                >
-                  <i class="fab fa-facebook-f me-2"></i>Sign in with facebook
-                </button>
+                
               </div>
             </div>
           </div>
         </div>
       </div>
     </section>
+
+    <script src="app.js"></script>
   </body>
 </html>

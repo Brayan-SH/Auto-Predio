@@ -1,3 +1,11 @@
+/* Espaciado para compensar la navbar fija */
+body {
+  padding-top: 65px;
+  overflow-x: hidden;
+  user-select: none;
+  min-width: 490px;
+}
+
 /* Estilos personalizados para sticky elements */
 .sticky-section-header {
   position: -webkit-sticky !important;
@@ -25,16 +33,9 @@
   /* color: ; */
 }
 
-/* Espaciado para compensar la navbar fija */
-body {
-  padding-top: 65px;
-  overflow-x: hidden;
-  user-select: none;
-  min-width: 490px;
-}
-
 /* Asegurar que el contenedor permita sticky */
-.container {height: auto;
+.container {
+  height: auto;
   overflow: visible;
 }
 
@@ -45,7 +46,7 @@ html {
 
 /* Mejora el contraste del contenido debajo */
 .card.mb-2 {
-  background-color: #f0ecec;
+  background-color: #e9f3f6;
   border-radius: 0 0 0.375rem 0.375rem;
   flex-wrap: wrap;
 }
@@ -53,7 +54,7 @@ html {
 /* Mejor separación visual */
 .card {
   border: none;
-  box-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  /* box-shadow: 0 2px 12px rgba(255, 255, 255, 0.08); */
   border-radius: 0.5rem;
   overflow: hidden;
 }
@@ -69,4 +70,11 @@ html {
 
 .container.section-formulario-nuevo-vehiculo {
   width: 100%;
+}
+
+/* Estilos para el login */
+.card-login {
+  background-color: #424242;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }

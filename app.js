@@ -9,6 +9,11 @@ function cargarVehiculos(page = 1) {
   const searchInput = document.getElementById("search-vehiculos");
   const titulo_vehiculos = document.getElementById("tus-vehiculos");
 
+  // Si no existe el contenedor, no hacer nada (no estamos en la página correcta)
+  if (!container) {
+    return;
+  }
+
   // Solo cambiar el título si el elemento existe (vendedor.html)
   if (titulo_vehiculos) {
     titulo_vehiculos.innerText = "🚘 Tus Vehículos";
@@ -20,7 +25,11 @@ function cargarVehiculos(page = 1) {
   // Mostrar indicador de carga
   container.innerHTML =
     '<div class="spinner-border" role="status"><span class="visually-hidden">Cargando...</span></div>';
-  paginationContainer.innerHTML = "";
+  
+  // Solo limpiar paginación si existe el contenedor
+  if (paginationContainer) {
+    paginationContainer.innerHTML = "";
+  }
 
   // Construir URL con parámetros
   let url = `http://localhost:5000/api/vehiculos?page=${page}&per_page=6`;
@@ -126,7 +135,7 @@ function verDetalle(vin) {
       const modalHtml = `
               <div class="modal fade" id="detalleModal" tabindex="-1">
                 <div class="modal-dialog modal-lg">
-                  <div class="modal">
+                  <div class="modal-content">
                     <div class="modal-header">
                       <h5 class="modal-title">${vehiculo.marca} ${vehiculo.modelo} ${vehiculo.anio_fabricacion}</h5>
                       <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
@@ -158,17 +167,40 @@ function verDetalle(vin) {
 
       // Agregar modal al DOM y mostrarlo
       document.body.insertAdjacentHTML("beforeend", modalHtml);
-      const modal = new bootstrap.Modal(
-        document.getElementById("detalleModal")
-      );
+      const modalEl = document.getElementById("detalleModal");
+      const modal = new bootstrap.Modal(modalEl);
       modal.show();
 
-      // Remover modal cuando se cierre
-      document
-        .getElementById("detalleModal")
-        .addEventListener("hidden.bs.modal", function () {
-          this.remove();
-        });
+      // Antes de que Bootstrap establezca aria-hidden al ocultar el modal,
+      // asegurarnos de que ningún elemento dentro del modal mantenga el foco.
+      // Si un descendiente mantiene foco, lo quitamos y transferimos el foco
+      // temporalmente al <body> para evitar la advertencia de accesibilidad.
+      modalEl.addEventListener("hide.bs.modal", function () {
+        try {
+          if (modalEl.contains(document.activeElement)) {
+            const body = document.body;
+            const hadTabIndex = body.hasAttribute("tabindex");
+            const prevTabIndex = body.getAttribute("tabindex");
+            // Hacer focus en body de forma segura
+            body.setAttribute("tabindex", "-1");
+            body.focus();
+            // Restaurar el tabindex previo si existía
+            if (hadTabIndex) {
+              body.setAttribute("tabindex", prevTabIndex);
+            } else {
+              body.removeAttribute("tabindex");
+            }
+          }
+        } catch (e) {
+          // No crítico: si algo falla, no bloquear la operación del modal.
+          console.warn("No se pudo mover el foco fuera del modal:", e);
+        }
+      });
+
+      // Remover modal del DOM cuando se cierre completamente
+      modalEl.addEventListener("hidden.bs.modal", function () {
+        this.remove();
+      });
     })
     .catch((error) => {
       console.error("Error:", error);
@@ -493,5 +525,82 @@ function limpiarFormularioVehiculo() {
   });
 }
 
-// Cargar vehículos automáticamente al cargar la página
-document.addEventListener("DOMContentLoaded", cargarVehiculos());
+function Login() {
+  let email = document.getElementById("email").value;
+  let password = document.getElementById("password").value;
+  
+  // Obtener el contenedor donde mostrar el contenido
+  const container = document.body;
+
+  let html = "";
+  html += `<section style="background-color: #424242; color: white; border-radius: 0.5rem;" class="container p-5 text-center">
+        <h3>¿Que deseas hacer?</h3>
+
+        <hr class="my-4" />
+        
+        <button class="btn btn-info">Comprar</button><br><br>
+        <button class="btn btn-primary">Vender</button><br><br>
+        <button class="btn btn-light">Invitado</button><br><br>
+        <button class="btn btn-danger">Cancelar</button>
+    </section>`;
+  container.innerHTML = html;
+
+  // let url = `http://localhost:5000/api/login`;
+
+  // fetch(url, {
+  //   method: "POST",
+  //   headers: {
+  //     "Content-Type": "application/json",
+  //   },
+  //   body: JSON.stringify({ email, password }),
+  // })
+  //   .then((response) => response.json())
+  //   .then((data) => {
+  //     if (data.message) {
+  //       alert("Login exitoso");
+  //       // Redirigir o realizar alguna acción adicional
+  //     } else if (data.error) {
+  //       alert("Error: " + data.error);
+  //     }
+  //   })
+  //   .catch((error) => {
+  //     console.error("Error:", error);
+  //     alert("Error al iniciar sesión");
+  //   });
+}
+
+function CrearCuenta() {
+  let email = document.getElementById("email").value;
+  let password = document.getElementById("password").value;
+
+  let url = `http://localhost:5000/api/crear-cuenta`;
+
+  fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email, password }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.message) {
+        alert("Cuenta creada exitosamente");
+        // Redirigir o realizar alguna acción adicional
+      } else if (data.error) {
+        alert("Error: " + data.error);
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      alert("Error al crear cuenta");
+    });
+}
+
+// Cargar vehículos automáticamente al cargar la página SOLO si estamos en la página correcta
+document.addEventListener("DOMContentLoaded", function() {
+  // Solo ejecutar cargarVehiculos si existe el contenedor necesario
+  if (document.getElementById("vehiculos-container")) {
+    cargarVehiculos();
+  }
+});
