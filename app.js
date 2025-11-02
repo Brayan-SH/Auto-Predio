@@ -25,7 +25,7 @@ function cargarVehiculos(page = 1) {
   // Mostrar indicador de carga
   container.innerHTML =
     '<div class="spinner-border" role="status"><span class="visually-hidden">Cargando...</span></div>';
-  
+
   // Solo limpiar paginación si existe el contenedor
   if (paginationContainer) {
     paginationContainer.innerHTML = "";
@@ -75,6 +75,29 @@ function cargarVehiculos(page = 1) {
       container.innerHTML =
         '<div class="alert alert-danger">Error al cargar vehículos</div>';
     });
+}
+
+// Función para cargar vehículos en cualquier página (crea contenedor si no existe)
+function cargarVehiculosEnCualquierPagina(page = 1) {
+  // Buscar contenedor existente o crear uno nuevo
+  let container = document.getElementById("vehiculos-container");
+
+  if (!container) {
+    // Crear contenedor temporal en el body
+    container = document.createElement("div");
+    container.id = "vehiculos-container";
+    container.className = "container mt-4";
+    document.body.appendChild(container);
+
+    // También crear contenedor de paginación
+    let paginationContainer = document.createElement("div");
+    paginationContainer.id = "pagination-vehiculos";
+    paginationContainer.className = "container mt-3";
+    document.body.appendChild(paginationContainer);
+  }
+
+  // Ahora usar la función normal
+  cargarVehiculos(page);
 }
 
 // Función para crear controles de paginación
@@ -336,7 +359,7 @@ function iniciarFormularioRegistroVehiculo() {
             type="text"
             id="numero-puertas"
             class="form-control"
-            placeholder="5 puertas"
+            placeholder="5"
           />
           <label for="traccion">Tracción:</label>
           <input
@@ -479,12 +502,13 @@ function guardarNuevoVehiculo() {
     garantia: document.getElementById("garantia").value,
     financiamiento: document.getElementById("financiamiento").value,
     predio_vendedor: document.getElementById("predio-vendedor").value,
-    contacto: document.getElementById("contacto").value
+    contacto: document.getElementById("contacto").value,
   };
 
   fetch(url, { // fetch: Realiza una solicitud HTTP
-    method: "POST", /* POST: publicar datos */
-    headers: { // Encabezados HTTP
+    method: "POST" /* POST: publicar datos */,
+    headers: {
+      // Encabezados HTTP
       "Content-Type": "application/json", // Indica que se envían datos JSON
     },
     body: JSON.stringify(nuevoVehiculo), // Enviar datos del nuevo vehículo como JSON al servidor
@@ -510,14 +534,35 @@ function guardarNuevoVehiculo() {
 // Función para limpiar el formulario de nuevo vehículo
 function limpiarFormularioVehiculo() {
   const campos = [
-    "vin", "numero-chasis", "marca", "modelo", "anio-fabricacion", "placa",
-    "tipo-vehiculo", "cc-motor", "tipo-combustible", "transmision", "color",
-    "kilometraje", "numero-puertas", "traccion", "condicion", "historial-accidentes",
-    "mantenimiento", "garantia", "precio", "financiamiento", "vendedor", "contacto",
-    "fotos", "descripcion_foto", "videos", "descripcion_video"
+    "vin",
+    "numero-chasis",
+    "marca",
+    "modelo",
+    "anio-fabricacion",
+    "placa",
+    "tipo-vehiculo",
+    "cc-motor",
+    "tipo-combustible",
+    "transmision",
+    "color",
+    "kilometraje",
+    "numero-puertas",
+    "traccion",
+    "condicion",
+    "historial-accidentes",
+    "mantenimiento",
+    "garantia",
+    "precio",
+    "financiamiento",
+    "vendedor",
+    "contacto",
+    "fotos",
+    "descripcion_foto",
+    "videos",
+    "descripcion_video",
   ];
-  
-  campos.forEach(campo => {
+
+  campos.forEach((campo) => {
     const elemento = document.getElementById(campo);
     if (elemento) {
       elemento.value = "";
@@ -525,55 +570,22 @@ function limpiarFormularioVehiculo() {
   });
 }
 
-function Login() {
-  let email = document.getElementById("email").value;
-  let password = document.getElementById("password").value;
-  
-  // Obtener el contenedor donde mostrar el contenido
-  const container = document.body;
-
-  let html = "";
-  html += `<section style="background-color: #424242; color: white; border-radius: 0.5rem;" class="container p-5 text-center">
-        <h3>¿Que deseas hacer?</h3>
-
-        <hr class="my-4" />
-        
-        <button class="btn btn-info">Comprar</button><br><br>
-        <button class="btn btn-primary">Vender</button><br><br>
-        <button class="btn btn-light">Invitado</button><br><br>
-        <button class="btn btn-danger">Cancelar</button>
-    </section>`;
-  container.innerHTML = html;
-
-  // let url = `http://localhost:5000/api/login`;
-
-  // fetch(url, {
-  //   method: "POST",
-  //   headers: {
-  //     "Content-Type": "application/json",
-  //   },
-  //   body: JSON.stringify({ email, password }),
-  // })
-  //   .then((response) => response.json())
-  //   .then((data) => {
-  //     if (data.message) {
-  //       alert("Login exitoso");
-  //       // Redirigir o realizar alguna acción adicional
-  //     } else if (data.error) {
-  //       alert("Error: " + data.error);
-  //     }
-  //   })
-  //   .catch((error) => {
-  //     console.error("Error:", error);
-  //     alert("Error al iniciar sesión");
-  //   });
+function formularioActualizarVehiculo(vin) {
+  // Implementar la función para actualizar vehículo
+  alert("Función de actualización de vehículo no implementada aún para VIN: " + vin);
 }
 
-function CrearCuenta() {
-  let email = document.getElementById("email").value;
-  let password = document.getElementById("password").value;
+function Login() {
+  // Primero obtener los valores ANTES de modificar el DOM
+  email = document.getElementById("email").value;
+  password = document.getElementById("password").value;
+  // verificar el email y el password no esten vacios
+  if (!email || !password) {
+    alert("Por favor, complete todos los campos");
+    return;
+  }
 
-  let url = `http://localhost:5000/api/crear-cuenta`;
+  let url = `http://localhost:5000/api/login`;
 
   fetch(url, {
     method: "POST",
@@ -585,6 +597,105 @@ function CrearCuenta() {
     .then((response) => response.json())
     .then((data) => {
       if (data.message) {
+        // Solo DESPUÉS del login exitoso, mostrar las opciones
+        const container = document.body;
+        let html = "";
+        html += `<section style="background-color: #424242; color: white; border-radius: 0.5rem;" class="container p-5 text-center">
+              <h3>¿Bienvenido qué deseas hacer?</h3>
+
+              <hr class="my-4" />
+                  
+              <button class="btn btn-info mb-3" onclick="window.open('cliente.html', '_blank')">
+                <i class="bi bi-search"></i> Ver/Comprar Vehículos Disponibles
+              </button><br>
+
+              <button class="btn btn-primary mb-3" onclick="window.open('vendedor.html', '_blank')">
+                <i class="bi bi-car-front"></i> Vender Mi Vehículo
+              </button><br>
+              
+              <button class="btn btn-danger mb-3" onclick="location.reload()">
+                <i class="bi bi-x-circle"></i> Cancelar
+                </button>
+            </section>`;
+        container.innerHTML = html;
+      } else if (data.error) {
+        alert("Error: " + data.error);
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      alert("Error al iniciar sesión");
+    });
+}
+
+function FormularioCuenta_Nueva() {
+  let html = "";
+  html += `
+    <section class="container p-5 text-center rounded-3" style="background-color: #424242; color: white">
+      <h2>Crear Nueva Cuenta</h2>
+      <form id="registerForm" class="mt-4">
+        <div class="mb-3">
+            <label for="email" class="form-label">Usuario: </label>
+            <input type="text" class="form-control-lg" id="email" placeholder='Usuario' required />
+        </div>
+        <div class="mb-3">
+            <label for="password" class="form-label">Contraseña: </label>
+            <input type="password" class="form-control-lg" id="password" placeholder='Contraseña' required />
+        </div>
+        <button type="button" class="btn btn-primary" onclick="CrearCuenta()">Crear Cuenta</button>
+        <button type="button" class="btn btn-danger" onclick="location.reload()">
+            <i class="bi bi-x-circle"></i> Cancelar
+            </button>
+      </form>
+    </section>
+  `;
+  document.body.innerHTML = html;
+}
+
+function CrearCuenta() {
+  let email = document.getElementById("email").value;
+  let password = document.getElementById("password").value;
+  
+  console.log("CrearCuenta() iniciada");
+  console.log("Email:", email);
+  console.log("Password:", password);
+  
+  // verificar el email y el password no esten vacios
+  if (!email || !password) {
+    alert("Por favor, complete todos los campos");
+    return;
+  }
+
+  let url = `http://localhost:5000/api/crear_cuenta`;
+  console.log("URL:", url);
+
+  const requestData = { email, password };
+  console.log("Datos a enviar:", requestData);
+
+  fetch(url, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(requestData),
+  })
+    .then((response) => {
+      console.log("Response recibida:", response);
+      console.log("Status:", response.status);
+      console.log("OK:", response.ok);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      return response.json();
+    })
+    .then((data) => {
+      console.log("Data recibida:", data);
+      if (data.message) {
+        // limpiar los campos del formulario
+        document.getElementById("email").value = "";
+        document.getElementById("password").value = "";
         alert("Cuenta creada exitosamente");
         // Redirigir o realizar alguna acción adicional
       } else if (data.error) {
@@ -592,13 +703,15 @@ function CrearCuenta() {
       }
     })
     .catch((error) => {
-      console.error("Error:", error);
+      console.error("Error completo:", error);
+      console.error("Tipo de error:", typeof error);
+      console.error("Mensaje de error:", error.message);
       alert("Error al crear cuenta");
     });
 }
 
 // Cargar vehículos automáticamente al cargar la página SOLO si estamos en la página correcta
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
   // Solo ejecutar cargarVehiculos si existe el contenedor necesario
   if (document.getElementById("vehiculos-container")) {
     cargarVehiculos();

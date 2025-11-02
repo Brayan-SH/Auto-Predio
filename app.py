@@ -232,6 +232,71 @@ def nuevo_vehiculo():
         print(f"Error en nuevo_vehiculo(): {e}")
         return jsonify({"error": "Error interno del servidor"}), 500
 
+@app.route('/api/login', methods=['POST'])
+def Login():
+    try:
+        # Validar que se recibieron datos JSON
+        if not request.json:
+            return jsonify({"error": "No se recibieron datos JSON"}), 400
+        
+        data = request.json
+        email = data.get("email")
+        password = data.get("password")
+
+        # Aquí iría la lógica de autenticación
+        conn = pyodbc.connect(config.get_connection_string())
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM usuarios WHERE email = ? AND password = ?", (email, password))
+        if cursor.fetchone()[0] > 0:
+            cursor.close()
+            conn.close()
+            return jsonify({"message": "Login exitoso"}), 200
+        else:
+            return jsonify({"error": "Credenciales inválidas"}), 401
+    except Exception as e:
+        print(f"Error en Login(): {e}")
+        return jsonify({"error": "Error interno del servidor"}), 500
+
+@app.route('/api/crear_cuenta', methods=['POST'])
+def Crear_Nueva_Cuenta():
+    try:
+        # Validar que se recibieron datos JSON (igual que login)
+        if not request.json:
+            return jsonify({"error": "No se recibieron datos JSON"}), 400
+            
+        data = request.json
+        email = data.get("email")
+        password = data.get("password")
+        print(f"Crear cuenta - Email: {email}, Password: {password}")
+
+        # Validar que se recibieron email y password
+        if not email or not password:
+            return jsonify({"error": "Email y contraseña son obligatorios"}), 400
+
+        # Aquí iría la lógica para crear una nueva cuenta
+        conn = pyodbc.connect(config.get_connection_string())
+        cursor = conn.cursor()
+        
+        # Verificar si ya existe un usuario con ese EMAIL
+        cursor.execute("SELECT COUNT(*) FROM usuarios WHERE email = ?", (email,))
+        if cursor.fetchone()[0] > 0:
+            cursor.close()
+            conn.close()
+            return jsonify({"error": "El email ya está en uso"}), 409
+
+        # Crear la nueva cuenta
+        cursor.execute("INSERT INTO usuarios (email, password) VALUES (?, ?)", (email, password))
+        conn.commit()
+        cursor.close()
+        conn.close()
+        return jsonify({"message": "Cuenta creada exitosamente"}), 201
+    except pyodbc.Error as e:
+        print(f"Error de base de datos en crear_cuenta(): {e}")
+        return jsonify({"error": f"Error de base de datos: {str(e)}"}), 500
+    except Exception as e:
+        print(f"Error en crear_cuenta(): {e}")
+        return jsonify({"error": f"Error interno del servidor: {str(e)}"}), 500
+
 # Ejecutar la aplicación
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)
