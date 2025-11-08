@@ -8,7 +8,14 @@ from dotenv import load_dotenv
 load_dotenv()
 
 app = Flask(__name__, static_folder='.')
-CORS(app)  # Habilitar CORS para todas las rutas
+# Configurar CORS para permitir todos los orígenes durante desarrollo
+CORS(app, resources={
+    r"/api/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization"]
+    }
+})
 
 class config:
     SERVER = os.getenv('DB_SERVER', 'localhost')
@@ -32,7 +39,7 @@ def index():
     return send_from_directory('.', 'index.html')
 
 @app.route('/api/vehiculos')
-def vehiculos():
+def Vehiculos():
     # Parámetros de paginación
     page = request.args.get('page', 1, type=int) # Por defecto página 1
     per_page = request.args.get('per_page', 10, type=int) # Por defecto 10 vehículos por página
@@ -64,6 +71,7 @@ def vehiculos():
             # Ejecutar query con paginación y búsqueda
             cursor = conn.cursor()
             cursor.execute(base_query + f" ORDER BY marca, modelo OFFSET {offset} ROWS FETCH NEXT {per_page} ROWS ONLY", (search_param, search_param, search_param))
+            
         else:
             # Primero contar total sin filtro
             cursor_count = conn.cursor()
@@ -85,7 +93,8 @@ def vehiculos():
                 "color": config.limpiar(row[5]),
                 "kilometraje": config.limpiar(row[6]),
                 "precio": config.limpiar(row[7]),
-                "condicion": config.limpiar(row[8])
+                "condicion": config.limpiar(row[8]),
+                "vendido": bool(row[-1]) if row[-1] is not None else False  # Estado de venta
             }
             vehiculos_lista.append(vehiculo)
         
@@ -114,7 +123,7 @@ def vehiculos():
 
 # Endpoint para detalles completos de un vehículo específico
 @app.route('/api/vehiculos/<string:vin>')
-def vehiculo_detalle(vin):
+def Vehiculo_Detalle(vin):
     conn = pyodbc.connect(config.get_connection_string())
     try:
         cursor = conn.cursor()
@@ -149,6 +158,7 @@ def vehiculo_detalle(vin):
             "predio_vendedor": config.limpiar(row[22]),
             "contacto": config.limpiar(row[23])
         }
+        
         cursor.close()
         return jsonify(vehiculo)
     except Exception as e:
@@ -158,8 +168,8 @@ def vehiculo_detalle(vin):
         conn.close()
 
 # Endpoint para guardar un nuevo vehículo
-@app.route('/api/nuevo_vehiculo', methods=['POST']) # POST: publicar datos
-def nuevo_vehiculo():
+@app.route('/api/nuevo-vehiculo', methods=['POST']) # POST: publicar datos
+def Nuevo_Vehiculo():
     try:
         # Validar que se recibieron datos JSON
         if not request.json:
@@ -189,8 +199,8 @@ def nuevo_vehiculo():
                 vin, marca, modelo, anio_fabricacion, color, kilometraje, precio, condicion, 
                 fecha_registro, numero_chasis, placa, tipo_vehiculo, cc_motor, tipo_combustible,
                 transmision, numero_puertas, traccion, historial_accidentes, mantenimiento,
-                garantia, disponibilidad_financiamiento, predio_o_vendedor, contacto, id_vendedor
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                garantia, disponibilidad_financiamiento, predio_o_vendedor, contacto, id_vendedor, vistas
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, GETDATE(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             config.limpiar(nuevo_vehiculo.get("vin")),
             config.limpiar(nuevo_vehiculo.get("marca")),
@@ -214,7 +224,8 @@ def nuevo_vehiculo():
             config.limpiar(nuevo_vehiculo.get("financiamiento", "No especificado")),
             config.limpiar(nuevo_vehiculo.get("predio_vendedor", "No especificado")),
             config.limpiar(nuevo_vehiculo.get("contacto", "No especificado")),
-            27  # ID de vendedor por defecto
+            27,  # ID de vendedor por defecto
+            0    # vistas - valor por defecto
         ))
         
         conn.commit()
@@ -239,11 +250,12 @@ def Login():
         if not request.json:
             return jsonify({"error": "No se recibieron datos JSON"}), 400
         
+        # Obtener datos de login
         data = request.json
         email = data.get("email")
         password = data.get("password")
 
-        # Aquí iría la lógica de autenticación
+        # Autenticar
         conn = pyodbc.connect(config.get_connection_string())
         cursor = conn.cursor()
         cursor.execute("SELECT COUNT(*) FROM usuarios WHERE email = ? AND password = ?", (email, password))
@@ -296,6 +308,137 @@ def Crear_Nueva_Cuenta():
     except Exception as e:
         print(f"Error en crear_cuenta(): {e}")
         return jsonify({"error": f"Error interno del servidor: {str(e)}"}), 500
+
+@app.route('/api/mostrar-vehiculo/<string:vin>', methods=['GET'])
+def Mostrar_Vehiculo(vin):
+    conn = pyodbc.connect(config.get_connection_string())
+    try:
+        
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM vehiculos WHERE vin = ?", (vin,))
+        row = cursor.fetchone()
+        
+        if not row:
+            cursor.close()
+            return jsonify({"error": "Vehículo no encontrado"}), 404
+        
+        vehiculo = {
+            "vin": config.limpiar(row[1]),
+            "marca": config.limpiar(row[2]),
+            "modelo": config.limpiar(row[3]),
+            "anio_fabricacion": config.limpiar(row[4]),
+            "numero_chasis": config.limpiar(row[10]),
+            "placa": config.limpiar(row[11]),
+            "tipo_vehiculo": config.limpiar(row[12]),
+            "cc_motor": config.limpiar(row[13]),
+            "tipo_combustible": config.limpiar(row[14]),
+            "transmision": config.limpiar(row[15]),
+            "color": config.limpiar(row[5]),
+            "kilometraje": config.limpiar(row[6]),
+            "numero_puertas": config.limpiar(row[16]),
+            "traccion": config.limpiar(row[17]),
+            "condicion": config.limpiar(row[8]),
+            "historial_accidentes": config.limpiar(row[18]),
+            "mantenimiento": config.limpiar(row[19]),
+            "garantia": config.limpiar(row[20]),
+            "precio": config.limpiar(row[7]),
+            "financiamiento": config.limpiar(row[21]),
+            "predio_vendedor": config.limpiar(row[22]),
+            "contacto": config.limpiar(row[23])
+        }
+        
+        cursor.close()
+        return jsonify(vehiculo)
+            
+    except pyodbc.Error as e:
+        print(f"Error de base de datos en mostrar_vehiculo(): {e}")
+        return jsonify({"error": f"Error de base de datos: {str(e)}"}), 500
+    except Exception as e:
+        print(f"Error en mostrar_vehiculo(): {e}")
+        return jsonify({"error": "Error interno del servidor"}), 500
+    finally:
+        conn.close()
+
+@app.route('/api/eliminar-vehiculo/<string:vin>', methods=['DELETE'])
+def Eliminar_Vehiculo(vin):
+    
+    conn = pyodbc.connect(config.get_connection_string())
+    try:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM vehiculos WHERE vin = ?", (vin,))
+        conn.commit()
+        cursor.close()
+        return jsonify({"message": "Vehículo eliminado exitosamente"}), 200
+    except pyodbc.Error as e:
+        print(f"Error de base de datos en eliminar_vehiculo(): {e}")
+        return jsonify({"error": f"Error de base de datos: {str(e)}"}), 500
+    except Exception as e:
+        print(f"Error en eliminar_vehiculo(): {e}")
+        return jsonify({"error": f"Error interno del servidor: {str(e)}"}), 500
+
+@app.route('/api/actualizar-vehiculo/<string:vin>', methods=['PUT'])
+def Actualizar_Vehiculo(vin):
+    # Actualizar el vehiculo
+    try:
+        # Validar que se recibieron datos JSON
+        if not request.json:
+            return jsonify({"error": "No se recibieron datos JSON"}), 400
+        
+        vehiculo_actualizado = request.json
+        
+        conn = pyodbc.connect(config.get_connection_string())
+        cursor = conn.cursor()
+        
+        # Verificar que el vehículo existe
+        cursor.execute("SELECT COUNT(*) FROM vehiculos WHERE vin = ?", (vin,))
+        if cursor.fetchone()[0] == 0:
+            cursor.close()
+            conn.close()
+            return jsonify({"error": "Vehículo no encontrado"}), 404
+        
+        # Actualizar vehículo
+        cursor.execute(""" 
+                UPDATE vehiculos SET
+                color = ?, 
+                kilometraje = ?, 
+                precio = ?, 
+                condicion = ?,
+                placa = ?,
+                transmision = ?,
+                historial_accidentes = ?, 
+                mantenimiento = ?,
+                garantia = ?, 
+                disponibilidad_financiamiento = ?, 
+                predio_o_vendedor = ?, 
+                contacto = ? 
+                WHERE vin = ?""", (
+            config.limpiar(vehiculo_actualizado.get("color", "No especificado")),
+            config.limpiar(vehiculo_actualizado.get("kilometraje", "0")),
+            config.limpiar(vehiculo_actualizado.get("precio", "0")),
+            config.limpiar(vehiculo_actualizado.get("condicion", "Usado")),
+            config.limpiar(vehiculo_actualizado.get("placa", "No especificado")),
+            config.limpiar(vehiculo_actualizado.get("transmision", "No especificado")),
+            config.limpiar(vehiculo_actualizado.get("historial_accidentes", "No especificado")),
+            config.limpiar(vehiculo_actualizado.get("mantenimiento", "No especificado")),
+            config.limpiar(vehiculo_actualizado.get("garantia", "No especificado")),
+            config.limpiar(vehiculo_actualizado.get("disponibilidad_financiamiento", "No especificado")),
+            config.limpiar(vehiculo_actualizado.get("predio_vendedor", "No especificado")),
+            config.limpiar(vehiculo_actualizado.get("contacto", "No especificado")),
+            vin
+        ))
+        
+        conn.commit()
+        cursor.close()
+        conn.close()
+        
+        return jsonify({"message": "Vehículo actualizado exitosamente"}), 200
+        
+    except pyodbc.Error as e:
+        print(f"Error de base de datos en actualizar_vehiculo(): {e}")
+        return jsonify({"error": f"Error de base de datos: {str(e)}"}), 500
+    except Exception as e:
+        print(f"Error en actualizar_vehiculo(): {e}")
+        return jsonify({"error": "Error interno del servidor"}), 500
 
 # Ejecutar la aplicación
 if __name__ == '__main__':

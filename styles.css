@@ -68,7 +68,7 @@ html {
   cursor: pointer;
 }
 
-.container.section-formulario-nuevo-vehiculo {
+.container.section-formulario-nuevo-vehiculo, .container.section-formulario-actualizar-vehiculo {
   width: 100%;
 }
 
@@ -77,4 +77,99 @@ html {
   background-color: #424242;
   color: white;
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+}
+
+/* Estilos para el catálogo por vendedor */
+.vendedor-section {
+  transition: all 0.3s ease;
+}
+
+.vendedor-section:hover {
+  transform: translateY(-2px);
+}
+
+.vendedor-section .card-header {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-bottom: 2px solid #dee2e6;
+}
+
+.vendedor-section .card {
+  border: none;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.07);
+  border-radius: 0.75rem;
+}
+
+.vendedor-section .card:hover {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Estilos para las tarjetas de vehículos */
+.vendedor-section .card .card {
+  transition: all 0.2s ease;
+  border: 2px solid transparent;
+}
+
+.vendedor-section .card .card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+}
+
+/* Estados de venta */
+.border-success {
+  border-color: #28a745 !important;
+}
+
+.border-warning {
+  border-color: #ffc107 !important;
+}
+
+/* Alertas flotantes */
+.alert.position-fixed {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: none;
+  border-radius: 0.5rem;
+}
+
+/* Códigos VIN */
+code {
+  background-color: #f8f9fa;
+  padding: 0.2rem 0.4rem;
+  border-radius: 0.25rem;
+  font-size: 0.8rem;
+  color: #6c757d;
+  border: 1px solid #dee2e6;
+}
+
+/* Badges mejorados */
+.badge.fs-6 {
+  font-size: 0.875rem !important;
+  padding: 0.5rem 0.75rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .vendedor-section .d-flex.gap-3 {
+    gap: 0.5rem !important;
+  }
+  
+  .vendedor-section .badge.fs-6 {
+    font-size: 0.75rem !important;
+    padding: 0.375rem 0.5rem;
+  }
+}
+
+/* Animaciones para el catálogo */
+.vendedor-section {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

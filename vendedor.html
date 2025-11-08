@@ -34,10 +34,11 @@
               <a class="nav-link" aria-current="page" onclick="cargarTodosVehiculos()" href="#"><i class="bi bi-book-half"></i> Mi Catalogo</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#registrar_vehiculo" onclick="iniciarFormularioRegistroVehiculo()" ><i class="bi bi-database-add"></i> Agregar Vehículo</a>
+              <a class="nav-link" href="#" onclick="iniciarFormularioRegistroVehiculo()" ><i class="bi bi-database-add"></i> Agregar Vehículo</a>
             </li>
             <li class="nav-item">
-              <a class="nav-link" href="#actualizar_vehiculo"><i class="bi bi-arrow-clockwise"></i> Actualizar Vehículo</a>
+              <a class="nav-link" href="#"
+              onclick="iniciarFormularioActualizarVehiculo()"><i class="bi bi-arrow-clockwise"></i> Actualizar Vehículo</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="#gestionar_consultas"><i class="bi bi-list"></i> Gestionar Consultas</a>
@@ -70,19 +71,19 @@
     <div class="container-fluid" style="padding-top: 1px;">
       
       <!-- Sección de Vehículos -->
-      <div class="row mt-2">
+      <div class="row mt-4">
         <div class="col-12">
           <!-- Header sticky de vehículos -->
-          <div class="d-flex justify-content-between align-items-center p-3 mb-0 bg-white shadow-sm sticky-top" style="top: 70px; z-index: 1019; border-radius: 0.5rem 0.5rem 0 0;">
+          <div class="d-flex justify-content-between align-items-center p-3 mb-0 bg-white shadow-sm sticky-top" style="top: 80px; z-index: 1019; border-radius: 0.5rem 0.5rem 0 0;">
             <a onclick="cargarTodosVehiculos()">
               <h5 class="mb-0 text-dark fw-boldr" id="tus-vehiculos">
                 🚘 Tus Vehículos
               </h5>
             </a>
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 align-items-center">
+                <!-- Búsqueda -->
                 <input autocomplete="on" class="form-control me-2" type="search" placeholder="Marca, Modelo, Vin..." id="search-vehiculos" style="width: 200px;">
-                <button class="btn btn-success btn-sm"
-              onclick="cargarVehiculos()">Filtrar</button>
+                <button class="btn btn-success btn-sm" onclick="cargarVehiculos()">Filtrar</button>
             </div>
           </div>
           
@@ -105,6 +106,5 @@
     <!-- Bootstrap 5.3 JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="app.js"></script>
-    </div> <!-- Cierre del container principal -->
   </body>
 </html>
