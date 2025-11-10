@@ -1,6 +1,7 @@
-// Variables globales para paginación
+// Variables globales para paginación y usuario
 let currentPage = 1;
 let currentSearch = "";
+let user = null; // Variable global para el usuario logueado
 
 // Función para limpiar modales problemáticos
 function limpiarModalesProblematicos() {
@@ -37,6 +38,11 @@ function limpiarModalesProblematicos() {
 function cargarVehiculosEnCualquierPagina(page = 1) {
   // Buscar contenedor existente o crear uno nuevo
   let container = document.getElementById("vehiculos-container");
+  let titulo_vehiculos = document.getElementById("title-vehiculos");
+
+  if (titulo_vehiculos) {
+    titulo_vehiculos.innerText = "🚘 Vehículos Disponibles";
+  }
 
   if (!container) {
     // Crear contenedor temporal en el body
@@ -219,7 +225,7 @@ function cargarVehiculos(page = 1) {
 
   // Solo cambiar el título si el elemento existe (vendedor.html)
   if (titulo_vehiculos) {
-    titulo_vehiculos.innerText = "🚘 Tus Vehículos";
+    titulo_vehiculos.innerText = "🚘 Vehículos Disponibles";
   }
 
   currentPage = page; // Actualizar página actual
@@ -283,11 +289,11 @@ function cargarVehiculos(page = 1) {
 // Función para cargar todos los vehículos (sin filtro)
 function cargarTodosVehiculos() {
   const searchInput = document.getElementById("search-vehiculos");
-  const titulo_vehiculos = document.getElementById("tus-vehiculos");
+  const titulo_vehiculos = document.getElementById("title-vehiculos");
 
   // Solo cambiar el título si el elemento existe (vendedor.html)
   if (titulo_vehiculos) {
-    titulo_vehiculos.innerText = "🚘 Tus Vehículos";
+    titulo_vehiculos.innerText = "🚘 Vehículos Disponibles";
   }
 
   if (searchInput) {
@@ -296,11 +302,188 @@ function cargarTodosVehiculos() {
   cargarVehiculos(1);
 }
 
+function cargarVehiculosPorVendedor(page = 1) {
+
+  const container = document.getElementById("vehiculos-container");
+  const paginationContainer = document.getElementById("pagination-vehiculos");
+  const searchInput = document.getElementById("search-vehiculos");
+  const titulo_vehiculos = document.getElementById("title-vehiculos");
+
+  // Verificar usuario: primero la variable global, luego localStorage
+  if (typeof user === 'undefined' || !user) {
+    user = localStorage.getItem('logged_user');
+    console.log("ID de usuario obtenido de localStorage:", user);
+  }
+  
+  if (!user) {
+    alert("No hay usuario logueado. Por favor inicie sesión primero.");
+    window.location.href = 'index.html';
+    return;
+  }
+
+  // Si no existe el contenedor, no hacer nada
+  if (!container) {
+    return;
+  }
+
+  // Obtener el email para mostrar en el título
+  const userEmail = localStorage.getItem('logged_user_email') || 'Usuario';
+
+  // Cambiar el título
+  if (titulo_vehiculos) {
+    titulo_vehiculos.innerText = `🚘 Mis Vehículos (${userEmail})`;
+  }
+
+  currentPage = page;
+  currentSearch = searchInput ? searchInput.value : "";
+
+  // Mostrar indicador de carga
+  container.innerHTML = '<div class="d-flex justify-content-center"><div class="spinner-border" role="status"><span class="visually-hidden">Cargando...</span></div></div>';
+
+  // Limpiar paginación
+  if (paginationContainer) {
+    paginationContainer.innerHTML = "";
+  }
+
+  // Construir URL con parámetros usando id_usuario
+  let url = `http://localhost:5000/api/vehiculos-usuario/${user}?page=${page}&per_page=6`;
+  if (currentSearch) {
+    url += `&search=${encodeURIComponent(currentSearch)}`;
+  }
+
+  fetch(url)
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.error) {
+        container.innerHTML = `<div class="alert alert-danger">${data.error}</div>`;
+        return;
+      }
+
+      let html = "";
+      if (data.vehiculos.length === 0) {
+        html = '<div class="alert alert-info col-12">No tienes vehículos registrados aún.<br><small>Puedes agregar vehículos usando la opción "Agregar Vehículo" en el menú.</small></div>';
+      } else {
+        data.vehiculos.forEach((vehiculo) => {
+          const estadoBadge = vehiculo.vendido ? 
+            '<span class="badge bg-success">Vendido</span>' : 
+            '<span class="badge bg-primary">Disponible</span>';
+          
+          html += `
+            <div class="col">
+              <div class="card mb-2 h-100">
+                <div class="card-body">
+                  <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="card-title mb-0">${vehiculo.marca} ${vehiculo.modelo}</h6>
+                    ${estadoBadge}
+                  </div>
+                  <p class="card-text">
+                    <small class="text-muted">Año: ${vehiculo.anio_fabricacion}</small><br>
+                    <small class="text-muted">Color: ${vehiculo.color}</small><br>
+                    <small class="text-muted">Precio: ${vehiculo.precio}</small><br>
+                    <small class="text-muted">Km: ${vehiculo.kilometraje}</small><br>
+                    <small class="text-muted">VIN: ${vehiculo.vin}</small>
+                  </p>
+                  <div class="d-flex gap-1 flex-wrap">
+                    <button class="btn btn-sm btn-outline-primary" onclick="verDetalle('${vehiculo.vin}')">
+                      <i class="bi bi-eye"></i> Ver Detalle
+                    </button>
+                    <button class="btn btn-sm ${vehiculo.vendido ? 'btn-outline-success' : 'btn-outline-warning'}" 
+                            onclick="cambiarEstadoVenta('${vehiculo.vin}', ${!vehiculo.vendido})">
+                      <i class="bi bi-arrow-repeat"></i> ${vehiculo.vendido ? 'Marcar Disponible' : 'Marcar Vendido'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        });
+      }
+      container.innerHTML = html;
+
+      // Crear controles de paginación personalizada para el usuario
+      if (data.pagination.total_pages > 1) {
+        createPaginationForUser(data.pagination);
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error);
+      container.innerHTML = '<div class="alert alert-danger">Error al cargar tus vehículos</div>';
+    });
+}
+
+// Función para crear paginación específica para vehículos del usuario
+function createPaginationForUser(pagination) {
+  const container = document.getElementById("pagination-vehiculos");
+  let html = '<nav><ul class="pagination pagination-sm justify-content-center">';
+
+  // Botón anterior
+  if (pagination.has_prev) {
+    html += `<li class="page-item"><a class="page-link" href="#" onclick="cargarVehiculosPorVendedor(${pagination.page - 1})">Anterior</a></li>`;
+  } else {
+    html += '<li class="page-item disabled"><span class="page-link">Anterior</span></li>';
+  }
+
+  // Números de página
+  let startPage = Math.max(1, pagination.page - 2);
+  let endPage = Math.min(pagination.total_pages, pagination.page + 2);
+
+  for (let i = startPage; i <= endPage; i++) {
+    if (i === pagination.page) {
+      html += `<li class="page-item active"><span class="page-link">${i}</span></li>`;
+    } else {
+      html += `<li class="page-item"><a class="page-link" href="#" onclick="cargarVehiculosPorVendedor(${i})">${i}</a></li>`;
+    }
+  }
+
+  // Botón siguiente
+  if (pagination.has_next) {
+    html += `<li class="page-item"><a class="page-link" href="#" onclick="cargarVehiculosPorVendedor(${pagination.page + 1})">Siguiente</a></li>`;
+  } else {
+    html += '<li class="page-item disabled"><span class="page-link">Siguiente</span></li>';
+  }
+
+  html += "</ul></nav>";
+  html += `<small class="text-muted d-block text-center mt-2">Mostrando hasta ${pagination.per_page} de ${pagination.total} de tus vehículos (Página ${pagination.page} de ${pagination.total_pages})</small>`;
+
+  container.innerHTML = html;
+}
+
+// Función para cambiar el estado de venta de un vehículo
+function cambiarEstadoVenta(vin, nuevoEstado) {
+  const estadoTexto = nuevoEstado ? "vendido" : "disponible";
+  
+  if (!confirm(`¿Estás seguro de marcar este vehículo como ${estadoTexto}?`)) {
+    return;
+  }
+
+  fetch(`http://localhost:5000/api/marcar-vendido/${vin}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({ vendido: nuevoEstado })
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.message) {
+      alert(`Vehículo marcado como ${estadoTexto} exitosamente`);
+      // Recargar la lista para mostrar el cambio
+      cargarVehiculosPorVendedor(currentPage);
+    } else if (data.error) {
+      alert("Error: " + data.error);
+    }
+  })
+  .catch(error => {
+    console.error("Error:", error);
+    alert("Error al cambiar el estado del vehículo");
+  });
+}
+
 // Formulario Registrar Vehículo
 function iniciarFormularioRegistroVehiculo() {
   const container = document.getElementById("vehiculos-container");
   const paginationContainer = document.getElementById("pagination-vehiculos");
-  const titulo_vehiculos = document.getElementById("tus-vehiculos");
+  const titulo_vehiculos = document.getElementById("title-vehiculos");
 
   // Solo cambiar el título si el elemento existe (vendedor.html)
   if (titulo_vehiculos) {
@@ -493,9 +676,17 @@ function iniciarFormularioRegistroVehiculo() {
 
 // Ingresar nuevo vehiculo
 function guardarNuevoVehiculo() {
+  // Verificar que hay un usuario logueado
+  const userId = user || localStorage.getItem('logged_user');
+  if (!userId) {
+    alert("No hay usuario logueado. Por favor inicie sesión primero.");
+    return;
+  }
+
   let url = `http://localhost:5000/api/nuevo-vehiculo`;
 
   const nuevoVehiculo = {
+    id_usuario: userId,  // Agregar ID del usuario logueado
     vin: document.getElementById("vin").value,
     marca: document.getElementById("marca").value,
     modelo: document.getElementById("modelo").value,
@@ -612,7 +803,9 @@ function ActivarInputsModificarVehiculo() {
 }
 
 function ActualizarVehiculo() {
+
   const vin = document.getElementById("vin").value;
+
   if (!vin) {
     alert("Por favor ingrese el VIN del vehículo a actualizar.");
     return;
@@ -647,7 +840,7 @@ function ActualizarVehiculo() {
       if (data.message) {
         alert("Vehículo actualizado exitosamente");
         // Volver a la lista de vehículos
-        cargarVehiculos(1);
+        cargarVehiculosPorVendedor();
       } else if (data.error) {
         alert("Error: " + data.error);
       }
@@ -689,7 +882,7 @@ function iniciarFormularioActualizarVehiculo() {
   const container = document.getElementById("vehiculos-container");
   container.innerHTML = "";
   const paginationContainer = document.getElementById("pagination-vehiculos");
-  const titulo_vehiculos = document.getElementById("tus-vehiculos");
+  const titulo_vehiculos = document.getElementById("title-vehiculos");
   paginationContainer.innerHTML = "";
 
   if (titulo_vehiculos) {
@@ -1176,6 +1369,7 @@ function iniciarFormularioActualizarVehiculo() {
 }
 
 function Login() {
+  
   // Primero obtener los valores ANTES de modificar el DOM
   email = document.getElementById("email").value;
   password = document.getElementById("password").value;
@@ -1199,9 +1393,17 @@ function Login() {
       if (data.message) {
         // Solo DESPUÉS del login exitoso, mostrar las opciones
         const container = document.body;
+        user = data.id_usuario; // Usar el id_usuario del response
+        
+        // Guardar id_usuario en localStorage para acceder desde otras ventanas
+        localStorage.setItem('logged_user', data.id_usuario);
+        localStorage.setItem('logged_user_email', email); // Guardar email por separado para mostrar
+        console.log("ID de usuario guardado en localStorage:", data.id_usuario);
+        
         let html = "";
         html += `<section style="background-color: #424242; color: white; border-radius: 0.5rem;" class="container p-5 text-center">
               <h3>¿Bienvenido qué deseas hacer?</h3>
+              <p class="mb-3"><i class="bi bi-person fs-4 me-2">${email}</i></p>
 
               <hr class="my-4" />
                   
@@ -1213,8 +1415,8 @@ function Login() {
                 <i class="bi bi-car-front"></i> Vender Mi Vehículo
               </button><br>
               
-              <button class="btn btn-danger mb-3" onclick="location.reload()">
-                <i class="bi bi-x-circle"></i> Cancelar
+              <button class="btn btn-danger mb-3" onclick="cerrarSesion()">
+                <i class="bi bi-x-circle"></i> Cerrar Sesión
                 </button>
             </section>`;
         container.innerHTML = html;
@@ -1223,6 +1425,7 @@ function Login() {
       }
     })
     .catch((error) => {
+      user = null;
       console.error("Error:", error);
       alert("Error al iniciar sesión");
     });
@@ -1234,18 +1437,74 @@ function FormularioCuenta_Nueva() {
     <section class="container p-5 text-center rounded-3" style="background-color: #424242; color: white">
       <h2>Crear Nueva Cuenta</h2>
       <form id="registerForm" class="mt-4">
-        <div class="mb-3">
-            <label for="email" class="form-label">Usuario </label>
-            <input type="text" class="form-control-lg" id="email" placeholder='Usuario' required />
+        <div class="row">
+          <div class="col-md-6">
+            <h5 class="text-start mb-3">🔐 Datos de Acceso</h5>
+            <div class="mb-3">
+                <label for="email" class="form-label text-start d-block">Email/Usuario</label>
+                <input type="email" class="form-control" id="email" placeholder='ejemplo@correo.com' required />
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label text-start d-block">Contraseña</label>
+                <input type="password" class="form-control" id="password" placeholder='Contraseña segura' required />
+            </div>
+          </div>
+          <div class="col-md-6">
+            <h5 class="text-start mb-3">👤 Datos Personales</h5>
+            <div class="mb-3">
+                <label for="nombre_completo" class="form-label text-start d-block">Nombre Completo</label>
+                <input type="text" class="form-control" id="nombre_completo" placeholder='Juan Pérez García' required />
+            </div>
+            <div class="mb-3">
+                <label for="telefono" class="form-label text-start d-block">Teléfono</label>
+                <input type="tel" class="form-control" id="telefono" placeholder='555-123-4567' required />
+            </div>
+            <div class="mb-3">
+                <label for="direccion" class="form-label text-start d-block">Dirección</label>
+                <input type="text" class="form-control" id="direccion" placeholder='Calle 123, Colonia, Ciudad' required />
+            </div>
+          </div>
         </div>
-        <div class="mb-3">
-            <label for="password" class="form-label">Contraseña </label>
-            <input type="password" class="form-control-lg" id="password" placeholder='Contraseña' required />
+        <div class="row mt-3">
+          <div class="col-12">
+            <h5 class="mb-3">🚗 Información de Negocio (para Vendedores)</h5>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="nombre_comercial" class="form-label text-start d-block">Nombre Comercial</label>
+                    <input type="text" class="form-control" id="nombre_comercial" placeholder='AutoMax Premium' />
+                </div>
+                <div class="mb-3">
+                    <label for="dpi" class="form-label text-start d-block">DPI/Cédula</label>
+                    <input type="text" class="form-control" id="dpi" placeholder='1234567890123' />
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                    <label for="tipo_vendedor" class="form-label text-start d-block">Tipo de Vendedor</label>
+                    <select class="form-control" id="tipo_vendedor">
+                        <option value="Persona Individual">Persona Individual</option>
+                        <option value="Concesionaria">Concesionaria</option>
+                        <option value="Distribuidor">Distribuidor</option>
+                        <option value="Agencia">Agencia</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label for="preferencias" class="form-label text-start d-block">Preferencias de Vehículos</label>
+                    <input type="text" class="form-control" id="preferencias" placeholder='SUV, Sedán, Deportivos' />
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <button type="button" class="btn btn-primary" onclick="CrearCuenta()">Crear Cuenta</button>
-        <button type="button" class="btn btn-danger" onclick="location.reload()">
+        <div class="mt-4">
+          <button type="button" class="btn btn-primary btn-lg me-3" onclick="CrearCuenta()">
+            <i class="bi bi-person-plus"></i> Crear Cuenta
+          </button>
+          <button type="button" class="btn btn-danger btn-lg" onclick="location.reload()">
             <i class="bi bi-x-circle"></i> Cancelar
-            </button>
+          </button>
+        </div>
       </form>
     </section>
   `;
@@ -1253,23 +1512,39 @@ function FormularioCuenta_Nueva() {
 }
 
 function CrearCuenta() {
+  // Obtener todos los datos del formulario
   let email = document.getElementById("email").value;
   let password = document.getElementById("password").value;
+  let nombre_completo = document.getElementById("nombre_completo").value;
+  let telefono = document.getElementById("telefono").value;
+  let direccion = document.getElementById("direccion").value;
+  let nombre_comercial = document.getElementById("nombre_comercial").value;
+  let dpi = document.getElementById("dpi").value;
+  let tipo_vendedor = document.getElementById("tipo_vendedor").value;
+  let preferencias = document.getElementById("preferencias").value;
 
   console.log("CrearCuenta() iniciada");
-  console.log("Email:", email);
-  console.log("Password:", password);
 
-  // verificar el email y el password no esten vacios
-  if (!email || !password) {
-    alert("Por favor, complete todos los campos");
+  // Verificar campos obligatorios
+  if (!email || !password || !nombre_completo || !telefono || !direccion || !dpi) {
+    alert("Por favor, complete todos los campos obligatorios (Email, Contraseña, Nombre, Teléfono, Dirección, DPI)");
     return;
   }
 
   let url = `http://localhost:5000/api/crear_cuenta`;
   console.log("URL:", url);
 
-  const requestData = { email, password };
+  const requestData = { 
+    email, 
+    password,
+    nombre_completo,
+    telefono,
+    direccion,
+    nombre_comercial: nombre_comercial || nombre_completo, // Si no hay nombre comercial, usar nombre completo
+    dpi,
+    tipo_vendedor,
+    preferencias: preferencias || "Sin preferencias específicas"
+  };
   console.log("Datos a enviar:", requestData);
 
   fetch(url, {
@@ -1310,10 +1585,30 @@ function CrearCuenta() {
     });
 }
 
+// Función para cerrar sesión
+function cerrarSesion() {
+  localStorage.removeItem('logged_user');
+  user = null;
+  location.reload();
+}
+
+// Función para inicializar usuario desde localStorage
+function inicializarUsuario() {
+  if (typeof user === 'undefined' || !user) {
+    user = localStorage.getItem('logged_user');
+    if (user) {
+      console.log("Usuario recuperado de localStorage:", user);
+    }
+  }
+}
+
 // Cargar vehículos automáticamente al cargar la página SOLO si estamos en la página correcta
 document.addEventListener("DOMContentLoaded", function () {
   // Limpiar modales problemáticos al cargar la página
   limpiarModalesProblematicos();
+  
+  // Inicializar usuario desde localStorage
+  inicializarUsuario();
 
   // Solo ejecutar cargarVehiculos si existe el contenedor necesario
   if (document.getElementById("vehiculos-container")) {
